@@ -26,6 +26,7 @@ class BaseDataset(torch.utils.data.Dataset):
         self.imgMaxSize = opt.imgMaxSize
         # max down sampling rate of network to avoid rounding during conv or pooling
         self.padding_constant = opt.padding_constant
+        self.ignore_index = opt.ignore_index
 
         # parse the input list
         self.parse_input_list(odgt, **kwargs)
@@ -59,7 +60,11 @@ class BaseDataset(torch.utils.data.Dataset):
 
     def segm_transform(self, segm):
         # to tensor, -1 to 149
-        segm = torch.from_numpy(np.array(segm)).long() - 1
+        segm = torch.from_numpy(np.array(segm)).long()
+        if self.ignore_index == 0:
+            segm -= 1
+        else:
+            segm[segm == self.ignore_index] = -1
         return segm
 
     # Round x to the nearest multiple of p and x' >= x

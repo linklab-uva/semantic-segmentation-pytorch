@@ -153,8 +153,17 @@ class ModelBuilder:
         net_decoder.apply(ModelBuilder.weights_init)
         if len(weights) > 0:
             print('Loading weights for net_decoder')
-            net_decoder.load_state_dict(
-                torch.load(weights, map_location=lambda storage, loc: storage), strict=False)
+            state = torch.load(weights, map_location=lambda storage, loc: storage)
+            m_state = net_decoder.state_dict()
+            # Discard mismatching final layers for transfer learning
+            for n, w in state.copy().items():
+                if ('conv_last' in n
+                     and ('weight' in n or 'bias' in n)
+                     and m_state[n].shape[0] == num_class
+                     and w.shape[0] != num_class):
+                    print('Discarding layer due to mismatching class dimension:', n)
+                    del state[n]
+            net_decoder.load_state_dict(state, strict=False)
         return net_decoder
 
 

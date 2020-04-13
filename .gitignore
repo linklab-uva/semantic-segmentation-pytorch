@@ -4,3 +4,8 @@ ckpt/
 vis/
 log/
 pretrained/
+result/
+
+.vscode/
+
+data/ADEChallengeData2016/
