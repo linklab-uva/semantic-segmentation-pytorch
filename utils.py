@@ -198,3 +198,25 @@ def parse_devices(input_devices):
             raise NotSupportedCliException(
                 'Can not recognize device: "{}"'.format(d))
     return ret
+
+
+def load_colors(colors_file):
+    if os.path.splitext(colors_file)[1] == '.mat':
+        colors = loadmat(colors_file)['colors']
+    else:
+        colors = np.loadtxt(colors_file, np.uint8)
+    return colors
+
+
+def load_names(names_file):
+    names = {}
+    with open(names_file) as f:
+        if os.path.splitext(names_file)[1] == '.csv':
+            reader = csv.reader(f)
+            next(reader)
+            for row in reader:
+                names[int(row[0])] = row[5].split(";")[0]
+        else:
+            for i, name in enumerate(f):
+                names[i+1] = name.strip()
+    return names

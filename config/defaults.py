@@ -27,6 +27,9 @@ _C.DATASET.segm_downsampling_rate = 8
 # randomly horizontally flip images when train/test
 _C.DATASET.random_flip = True
 
+_C.DATASET.colors_file = "./data/color150.mat"
+_C.DATASET.names_file = "./data/object150_info.csv"
+
 # -----------------------------------------------------------------------------
 # Model
 # -----------------------------------------------------------------------------

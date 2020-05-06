@@ -9,6 +9,8 @@ DATASET:
   padding_constant: 8
   segm_downsampling_rate: 8
   random_flip: True
+  colors_file: "../bdd100k/seg/colors.txt"
+  names_file: "../bdd100k/seg/categories.txt"
 
 MODEL:
   arch_encoder: "mobilenetv2dilated"

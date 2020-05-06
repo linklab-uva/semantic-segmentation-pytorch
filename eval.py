@@ -12,23 +12,21 @@ from scipy.io import loadmat
 from config import cfg
 from dataset import ValDataset
 from models import ModelBuilder, SegmentationModule
-from utils import AverageMeter, colorEncode, accuracy, intersectionAndUnion, setup_logger
+from utils import AverageMeter, colorEncode, accuracy, intersectionAndUnion, setup_logger, load_colors
 from lib.nn import user_scattered_collate, async_copy_to
 from lib.utils import as_numpy
 from PIL import Image
 from tqdm import tqdm
 
-colors = loadmat('data/color150.mat')['colors']
 
-
-def visualize_result(data, pred, dir_result):
+def visualize_result(data, pred, dir_result, cfg):
     (img, seg, info) = data
 
     # segmentation
-    seg_color = colorEncode(seg, colors)
+    seg_color = colorEncode(seg, cfg.DATASET.colors)
 
     # prediction
-    pred_color = colorEncode(pred, colors)
+    pred_color = colorEncode(pred, cfg.DATASET.colors)
 
     # aggregate images and save
     im_vis = np.concatenate((img, seg_color, pred_color),
@@ -89,7 +87,8 @@ def evaluate(segmentation_module, loader, cfg, gpu):
             visualize_result(
                 (batch_data['img_ori'], seg_label, batch_data['info']),
                 pred,
-                os.path.join(cfg.DIR, 'result')
+                os.path.join(cfg.DIR, 'result'),
+                cfg
             )
 
         pbar.update(1)
@@ -189,5 +188,7 @@ if __name__ == '__main__':
 
     if not os.path.isdir(os.path.join(cfg.DIR, "result")):
         os.makedirs(os.path.join(cfg.DIR, "result"))
+
+    cfg.DATASET.colors = load_colors(cfg.DATASET.colors_file)
 
     main(cfg, args.gpu)
