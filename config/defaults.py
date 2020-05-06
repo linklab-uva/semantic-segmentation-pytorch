@@ -96,3 +96,14 @@ _C.TEST.batch_size = 1
 _C.TEST.checkpoint = "epoch_20.pth"
 # folder to output visualization results
 _C.TEST.result = "./"
+
+# -----------------------------------------------------------------------------
+# Bayesian
+# -----------------------------------------------------------------------------
+_C.BAYESIAN = CN()
+_C.BAYESIAN.start_epoch = 0
+_C.BAYESIAN.num_epoch = 20
+_C.BAYESIAN.predict_samples = 100
+_C.BAYESIAN.prior_scale = 1.
+_C.BAYESIAN.lr = 1e-3
+_C.BAYESIAN.checkpoint = "epoch_40.pth"

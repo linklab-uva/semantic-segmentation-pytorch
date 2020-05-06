@@ -40,4 +40,9 @@ TEST:
   checkpoint: "epoch_40.pth"
   result: "./"
 
+BAYESIAN:
+  checkpoint: "epoch_40.pth"
+  start_epoch: 0
+  num_epoch: 20
+
 DIR: "ckpt/ade20k-mobilenetv2dilated-c1_deepsup-bdd100k"
