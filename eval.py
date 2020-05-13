@@ -7,7 +7,6 @@ from distutils.version import LooseVersion
 import numpy as np
 import torch
 import torch.nn as nn
-from scipy.io import loadmat
 # Our libs
 from config import cfg
 from dataset import ValDataset
@@ -18,15 +17,17 @@ from lib.utils import as_numpy
 from PIL import Image
 from tqdm import tqdm
 
+colors = None
 
-def visualize_result(data, pred, dir_result, cfg):
+
+def visualize_result(data, pred, dir_result):
     (img, seg, info) = data
 
     # segmentation
-    seg_color = colorEncode(seg, cfg.DATASET.colors)
+    seg_color = colorEncode(seg, colors)
 
     # prediction
-    pred_color = colorEncode(pred, cfg.DATASET.colors)
+    pred_color = colorEncode(pred, colors)
 
     # aggregate images and save
     im_vis = np.concatenate((img, seg_color, pred_color),
@@ -87,8 +88,7 @@ def evaluate(segmentation_module, loader, cfg, gpu):
             visualize_result(
                 (batch_data['img_ori'], seg_label, batch_data['info']),
                 pred,
-                os.path.join(cfg.DIR, 'result'),
-                cfg
+                os.path.join(cfg.DIR, 'result')
             )
 
         pbar.update(1)
@@ -189,6 +189,6 @@ if __name__ == '__main__':
     if not os.path.isdir(os.path.join(cfg.DIR, "result")):
         os.makedirs(os.path.join(cfg.DIR, "result"))
 
-    cfg.DATASET.colors = load_colors(cfg.DATASET.colors_file)
+    colors = load_colors(cfg.DATASET.colors_file)
 
     main(cfg, args.gpu)

@@ -18,6 +18,9 @@ from PIL import Image
 from tqdm import tqdm
 from config import cfg
 
+colors = None
+names = None
+
 
 def visualize_result(data, pred, cfg):
     (img, info) = data
@@ -28,13 +31,13 @@ def visualize_result(data, pred, cfg):
     uniques, counts = np.unique(pred, return_counts=True)
     print("Predictions in [{}]:".format(info))
     for idx in np.argsort(counts)[::-1]:
-        name = cfg.DATASET.names[uniques[idx] + 1]
+        name = names[uniques[idx] + 1]
         ratio = counts[idx] / pixs * 100
         if ratio > 0.1:
             print("  {}: {:.2f}%".format(name, ratio))
 
     # colorize prediction
-    pred_color = colorEncode(pred, cfg.DATASET.colors).astype(np.uint8)
+    pred_color = colorEncode(pred, colors).astype(np.uint8)
 
     # aggregate images and save
     im_vis = np.concatenate((img, pred_color), axis=1)
@@ -187,7 +190,7 @@ if __name__ == '__main__':
     if not os.path.isdir(cfg.TEST.result):
         os.makedirs(cfg.TEST.result)
 
-    cfg.DATASET.colors = load_colors(cfg.DATASET.colors_file)
-    cfg.DATASET.names = load_names(cfg.DATASET.names_file)
+    colors = load_colors(cfg.DATASET.colors_file)
+    names = load_names(cfg.DATASET.names_file)
 
     main(cfg, args.gpu)
