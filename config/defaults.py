@@ -105,7 +105,7 @@ _C.TEST.result = "./"
 # -----------------------------------------------------------------------------
 _C.BAYESIAN = CN()
 _C.BAYESIAN.start_epoch = 0
-_C.BAYESIAN.num_epoch = 20
+_C.BAYESIAN.num_epoch = 10
 _C.BAYESIAN.predict_samples = 100
 _C.BAYESIAN.prior_scale = 1.
 _C.BAYESIAN.lr = 1e-3

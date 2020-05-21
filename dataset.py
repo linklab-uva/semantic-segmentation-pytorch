@@ -38,6 +38,8 @@ class BaseDataset(torch.utils.data.Dataset):
 
     def parse_input_list(self, odgt, max_sample=-1, start_idx=-1, end_idx=-1):
         if isinstance(odgt, list):
+            if odgt and isinstance(odgt[0], str):
+                odgt = [{'fpath_img': x} for x in odgt]
             self.list_sample = odgt
         elif isinstance(odgt, str):
             self.list_sample = [json.loads(x.rstrip()) for x in open(odgt, 'r')]
@@ -209,9 +211,10 @@ class TrainDataset(BaseDataset):
 
 
 class ValDataset(BaseDataset):
-    def __init__(self, root_dataset, odgt, opt, **kwargs):
+    def __init__(self, root_dataset, odgt, opt, out_list=True, **kwargs):
         super(ValDataset, self).__init__(odgt, opt, **kwargs)
         self.root_dataset = root_dataset
+        self.out_list = out_list
 
     def __getitem__(self, index):
         this_record = self.list_sample[index]
@@ -243,16 +246,16 @@ class ValDataset(BaseDataset):
             # image transform, to torch float tensor 3xHxW
             img_resized = self.img_transform(img_resized)
             img_resized = torch.unsqueeze(img_resized, 0)
-            img_resized_list.append(img_resized)
+            img_resized_list.append(img_resized.contiguous())
 
         # segm transform, to torch long tensor HxW
         segm = self.segm_transform(segm)
-        batch_segms = torch.unsqueeze(segm, 0)
+        batch_segms = torch.unsqueeze(segm, 0).contiguous()
 
         output = dict()
         output['img_ori'] = np.array(img)
-        output['img_data'] = [x.contiguous() for x in img_resized_list]
-        output['seg_label'] = batch_segms.contiguous()
+        output['img_data'] = img_resized_list if self.out_list else img_resized_list[0]
+        output['seg_label'] = batch_segms
         output['info'] = this_record['fpath_img']
         return output
 
@@ -261,8 +264,9 @@ class ValDataset(BaseDataset):
 
 
 class TestDataset(BaseDataset):
-    def __init__(self, odgt, opt, **kwargs):
+    def __init__(self, odgt, opt, out_list=True, **kwargs):
         super(TestDataset, self).__init__(odgt, opt, **kwargs)
+        self.out_list = out_list
 
     def __getitem__(self, index):
         this_record = self.list_sample[index]
@@ -289,11 +293,11 @@ class TestDataset(BaseDataset):
             # image transform, to torch float tensor 3xHxW
             img_resized = self.img_transform(img_resized)
             img_resized = torch.unsqueeze(img_resized, 0)
-            img_resized_list.append(img_resized)
+            img_resized_list.append(img_resized.contiguous())
 
         output = dict()
         output['img_ori'] = np.array(img)
-        output['img_data'] = [x.contiguous() for x in img_resized_list]
+        output['img_data'] = img_resized_list if self.out_list else img_resized_list[0]
         output['info'] = this_record['fpath_img']
         return output
 

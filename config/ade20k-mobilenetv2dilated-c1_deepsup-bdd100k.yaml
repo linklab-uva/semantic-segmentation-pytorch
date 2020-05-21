@@ -4,8 +4,9 @@ DATASET:
   list_val: "../bdd100k/seg/validation.odgt"
   num_class: 19
   ignore_index: 255
-  imgSizes: (300, 375, 450, 525, 600)
-  imgMaxSize: 1000
+  # imgSizes: (300, 375, 450, 525, 600)
+  imgSizes: (720,)
+  imgMaxSize: 1280
   padding_constant: 8
   segm_downsampling_rate: 8
   random_flip: True
@@ -45,6 +46,6 @@ TEST:
 BAYESIAN:
   checkpoint: "epoch_40.pth"
   start_epoch: 0
-  num_epoch: 20
+  num_epoch: 10
 
 DIR: "ckpt/ade20k-mobilenetv2dilated-c1_deepsup-bdd100k"

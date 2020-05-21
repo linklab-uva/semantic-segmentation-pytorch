@@ -217,8 +217,8 @@ def load_names(names_file):
             reader = csv.reader(f)
             next(reader)
             for row in reader:
-                names[int(row[0])] = row[5].split(";")[0]
+                names[int(row[0])-1] = row[5].split(";")[0]
         else:
             for i, name in enumerate(f):
-                names[i+1] = name.strip()
+                names[i] = name.strip()
     return names

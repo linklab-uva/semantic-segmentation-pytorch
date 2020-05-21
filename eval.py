@@ -37,7 +37,11 @@ def visualize_result(data, pred, dir_result):
     Image.fromarray(im_vis).save(os.path.join(dir_result, img_name.replace('.jpg', '.png')))
 
 
-def evaluate(segmentation_module, loader, cfg, gpu):
+def evaluate(segmentation_module, loader, cfg, gpu, results_file=None):
+    if results_file and isinstance(results_file, str):
+        with open(results_file, 'w') as results_file:
+            return evaluate(segmentation_module, loader, cfg, gpu, results_file)
+
     acc_meter = AverageMeter()
     intersection_meter = AverageMeter()
     union_meter = AverageMeter()
@@ -91,6 +95,11 @@ def evaluate(segmentation_module, loader, cfg, gpu):
                 os.path.join(cfg.DIR, 'result')
             )
 
+        if results_file:
+            iou = intersection / (union + 1e-10)
+            recs = [batch_data["info"], acc, *iou]
+            results_file.write('\t'.join(map(str, recs)) + '\n')
+
         pbar.update(1)
 
     # summary
@@ -103,7 +112,7 @@ def evaluate(segmentation_module, loader, cfg, gpu):
           .format(iou.mean(), acc_meter.average()*100, time_meter.average()))
 
 
-def main(cfg, gpu):
+def main(cfg, gpu, results_file=None):
     torch.cuda.set_device(gpu)
 
     # Network Builders
@@ -138,7 +147,7 @@ def main(cfg, gpu):
     segmentation_module.cuda()
 
     # Main loop
-    evaluate(segmentation_module, loader_val, cfg, gpu)
+    evaluate(segmentation_module, loader_val, cfg, gpu, results_file)
 
     print('Evaluation Done!')
 
@@ -161,6 +170,10 @@ if __name__ == '__main__':
         "--gpu",
         default=0,
         help="gpu to use"
+    )
+    parser.add_argument(
+        "--write-results",
+        help="file to write per-image accuracy/iou results to"
     )
     parser.add_argument(
         "opts",
@@ -191,4 +204,4 @@ if __name__ == '__main__':
 
     colors = load_colors(cfg.DATASET.colors_file)
 
-    main(cfg, args.gpu)
+    main(cfg, args.gpu, args.write_results)

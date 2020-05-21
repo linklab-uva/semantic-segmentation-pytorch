@@ -31,7 +31,7 @@ def visualize_result(data, pred, cfg):
     uniques, counts = np.unique(pred, return_counts=True)
     print("Predictions in [{}]:".format(info))
     for idx in np.argsort(counts)[::-1]:
-        name = names[uniques[idx] + 1]
+        name = names[uniques[idx]]
         ratio = counts[idx] / pixs * 100
         if ratio > 0.1:
             print("  {}: {:.2f}%".format(name, ratio))
