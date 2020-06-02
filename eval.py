@@ -11,13 +11,14 @@ import torch.nn as nn
 from config import cfg
 from dataset import ValDataset
 from models import ModelBuilder, SegmentationModule
-from utils import AverageMeter, colorEncode, accuracy, intersectionAndUnion, setup_logger, load_colors
+from utils import AverageMeter, colorEncode, accuracy, intersectionAndUnion, setup_logger, load_colors, load_names
 from lib.nn import user_scattered_collate, async_copy_to
 from lib.utils import as_numpy
 from PIL import Image
 from tqdm import tqdm
 
 colors = None
+names = None
 
 
 def visualize_result(data, pred, dir_result):
@@ -38,9 +39,7 @@ def visualize_result(data, pred, dir_result):
 
 
 def evaluate(segmentation_module, loader, cfg, gpu, results_file=None):
-    if results_file and isinstance(results_file, str):
-        with open(results_file, 'w') as results_file:
-            return evaluate(segmentation_module, loader, cfg, gpu, results_file)
+    results = []
 
     acc_meter = AverageMeter()
     intersection_meter = AverageMeter()
@@ -96,9 +95,9 @@ def evaluate(segmentation_module, loader, cfg, gpu, results_file=None):
             )
 
         if results_file:
-            iou = intersection / (union + 1e-10)
-            recs = [batch_data["info"], acc, *iou]
-            results_file.write('\t'.join(map(str, recs)) + '\n')
+            ious = intersection / (union + 1e-10)
+            recs = [batch_data["info"], acc] + np.column_stack((union, ious)).ravel().tolist()
+            results.append(recs)
 
         pbar.update(1)
 
@@ -110,6 +109,13 @@ def evaluate(segmentation_module, loader, cfg, gpu, results_file=None):
     print('[Eval Summary]:')
     print('Mean IoU: {:.4f}, Accuracy: {:.2f}%, Inference Time: {:.4f}s'
           .format(iou.mean(), acc_meter.average()*100, time_meter.average()))
+
+    if results_file:
+        import pandas as pd
+        headers = ['File', 'Acc']
+        for i in range(len(names)):
+            headers.extend((names[i] + '_union', names[i] + '_iou'))
+        pd.DataFrame(results, columns=headers).to_csv(results_file, index=False)
 
 
 def main(cfg, gpu, results_file=None):
@@ -203,5 +209,6 @@ if __name__ == '__main__':
         os.makedirs(os.path.join(cfg.DIR, "result"))
 
     colors = load_colors(cfg.DATASET.colors_file)
+    names = load_names(cfg.DATASET.names_file)
 
     main(cfg, args.gpu, args.write_results)
