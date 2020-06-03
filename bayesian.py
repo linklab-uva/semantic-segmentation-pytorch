@@ -7,6 +7,7 @@ import copy
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import pyro
 import pyro.distributions as dist
 from pyro import poutine
@@ -52,7 +53,7 @@ class BayesianC1_1(PyroModule):
     def forward(self, conv_out, y=None):
         x = self.cbr(conv_out)
         x = self.conv_last(x)
-        x = nn.functional.log_softmax(x, dim=1)
+        x = F.log_softmax(x, dim=1)
 
         if y is not None:
             mask = y >= 0
@@ -97,7 +98,7 @@ class BayesianC1_2(PyroModule):
         x = self.bn1(x)
         x = self.relu(x)
         x = self.conv_last(x)
-        x = nn.functional.log_softmax(x, dim=1)
+        x = F.log_softmax(x, dim=1)
 
         if y is not None:
             mask = y >= 0
@@ -110,15 +111,16 @@ class BayesianC1_2(PyroModule):
 
 
 class BayesianSegmentationModule(nn.Module):
-    def __init__(self, net_enc, net_dec):
+    def __init__(self, net_enc, net_dec, predict_samples=None):
         super().__init__()
         self.encoder = net_enc
         self.decoder = net_dec
         self.decoder_guide = AutoDiagonalNormal(poutine.block(self.decoder, hide=["obs"]))
         self.optim = Adam({"lr": cfg.BAYESIAN.lr})
         self.svi = SVI(self.decoder, self.decoder_guide, self.optim, loss=Trace_ELBO())
+        predict_samples = predict_samples or cfg.BAYESIAN.predict_samples
         self.predictive = Predictive(self.decoder, guide=self.decoder_guide,
-            num_samples=cfg.BAYESIAN.predict_samples, return_sites=['_RETURN'])
+            num_samples=predict_samples, return_sites=['_RETURN'])
 
         # Freeze encoder
         self.encoder.eval()
@@ -139,7 +141,7 @@ class BayesianSegmentationModule(nn.Module):
         conv_out = self.encoder(feed_dict['img_data'])[0]
         preds = self.predictive(conv_out)['_RETURN']
         if segSize is not None:
-            preds = nn.functional.interpolate(
+            preds = F.interpolate(
                 preds.view(preds.shape[0]*preds.shape[1], *preds.shape[2:]),
                 size=segSize, mode='bilinear', align_corners=False
                 ).view(*preds.shape[:3], *segSize)
@@ -149,7 +151,7 @@ class BayesianSegmentationModule(nn.Module):
         logits = self.all_predictions(feed_dict)
         preds = logits.mean(0)
         if segSize is not None:
-            preds = nn.functional.interpolate(
+            preds = F.interpolate(
                 preds, size=segSize, mode='bilinear', align_corners=False)
         return preds
 
