@@ -9,3 +9,5 @@ result/
 .vscode/
 
 data/ADEChallengeData2016/
+
+.ipynb_checkpoints/
